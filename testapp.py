@@ -367,7 +367,7 @@ class RunTestFrame(wx.Frame, Player):
 
     def set_label(self, str=None):
         if str is None:
-            str = "zestaw {}, przykład {}".format(self.current_set, self.current_example)
+            str = "zestaw {}, przykład {}".format(self.current_set+1, self.current_example+1)
         self.label.SetLabelText(str)
         self.label.PostSizeEventToParent()
 
