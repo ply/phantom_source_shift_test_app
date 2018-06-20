@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import wx, sys, os, shutil, datetime, configparser, yaml, random
+import wx, sys, os, shutil, datetime, configparser, json, random
 import traceback
 import pyaudio, soundfile
 
@@ -97,7 +97,6 @@ class TestScheme:
             self.test.append(self._Set(name, samples))
 
 
-# TODO: migrate to configparset.ConfigParser(delimiters=(':', '=')) + json
 class ResultsHandler:
     def __init__(self, filename):
         if not os.path.isdir(os.path.dirname(filename)):
@@ -107,13 +106,14 @@ class ResultsHandler:
         if os.path.exists(filename):
             raise FileExistsError
         self.f = open(filename, 'w')
-        self.data = dict(meta={}, results=[])
+        self.parser = configparser.ConfigParser()
+        self.parser.add_section('metadata')
 
     def __setitem__(self, k, v):
         self.set_meta({k: v})
 
     def set_meta(self, dictionary, save=True):
-        self.data['meta'].update(dictionary)
+        self.parser['metadata'].update({k: str(v) for k, v in dictionary.items()})
         if save:
             self.save()
 
@@ -121,21 +121,17 @@ class ResultsHandler:
         shutil.copyfile(self.f.name, "{}.bak".format(self.f.name))
         self.f.seek(0)
         self.f.truncate()
-        yaml.safe_dump(self.data, self.f, default_flow_style=False)
+        self.parser.write(self.f)
 
     def submit(self, set, sample, answer, comment, time, playcount):
-        try:
-            set_dict = next(filter(lambda s: s['set'] == set, self.data['results']))
-        except StopIteration:
-            self.data['results'].append(dict(set=set, data=list()))
-            set_dict = self.data['results'][-1]
-        set_dict['data'].append({
-            'sample': sample,
-            'answer': answer,
-            'comment': comment,
-            'time': time,
-            'playcount': playcount,
-        })
+        if not self.parser.has_section(set):
+            self.parser.add_section(set)
+        self.parser.set(set, sample, json.dumps(dict(
+            answer=answer,
+            comment=comment,
+            time=time,
+            playcount=playcount
+        )))
         self.save()
 
     def __del__(self):
@@ -247,7 +243,7 @@ class RunTestFrame(wx.Frame, Player):
         # open results file
         outfilename = os.path.join(
             self.scheme.results_dir,
-            datetime.datetime.today().strftime("%Y-%m-%d-T-%H-%M-%S.yaml"))
+            datetime.datetime.today().strftime("%Y-%m-%d-T-%H-%M-%S.txt"))
         try:
             self.results = ResultsHandler(outfilename)
         except FileExistsError:
