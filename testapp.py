@@ -312,6 +312,7 @@ class RunTestFrame(wx.Frame, Player):
         self.slider.SetSizeHints(402, self.slider.GetMinHeight())
         self.slider.Bind(wx.EVT_LEFT_DCLICK, self.reset_slider)
         self.slider.Bind(wx.EVT_RIGHT_DOWN, self.reset_slider)
+        self.slider.Bind(wx.EVT_SLIDER, self.on_slider)
         vbox_add(self.slider, wx.BOTTOM)
         vbox_add(wx.StaticText(panel, label="Komentarz (opcjonalny):"), wx.ALL)
         self.comment = wx.TextCtrl(panel)
@@ -357,6 +358,7 @@ class RunTestFrame(wx.Frame, Player):
         self.play_btn.SetFocus()
         self.slider.SetFocus()
         self.comment.SetValue('')
+        self.enter.Disable()
 
         # set internals and play
         self.play_count = 0
@@ -379,6 +381,10 @@ class RunTestFrame(wx.Frame, Player):
             self.play_count
         )
         self.next_example()
+
+    def on_slider(self, e):
+        self.enter.Enable()
+        e.Skip()
 
     def reset_slider(self, _event=None):
         self.slider.SetValue(0)
