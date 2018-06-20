@@ -346,6 +346,7 @@ class RunTestFrame(wx.Frame, Player):
         self.current_example += 1
         if self.current_example == len(self.scheme.test[self.current_set].content):
             self.current_set += 1
+            self.current_example = 0
             if self.current_set == len(self.scheme.test):
                 self.finalize()
                 return
