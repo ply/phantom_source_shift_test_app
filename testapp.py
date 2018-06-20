@@ -11,8 +11,9 @@ class Player:
 
     def __init__(self, pyaudio_instance):
         self.pyAudio = pyaudio_instance
-        self.sndfile = None
         self.stream = None
+        self.__audio_data = None
+        self.__position = 0
 
     def __del__(self):
         if self.stream is not None:
@@ -20,9 +21,8 @@ class Player:
 
     def play(self, filename=None, devid=None):
         if filename is None:
-            filename = self._filename
-        else:
-            self._filename = filename
+            filename = self.__filename
+
         if devid is None:
             devid = self._devid
         else:
@@ -30,26 +30,38 @@ class Player:
 
         if self.stream is not None:
             self.stream.stop_stream()
-            self.stream.close()
-        if self.sndfile is None or self.sndfile.name != filename:
-            del self.sndfile  # calls .close()
-            self.sndfile = soundfile.SoundFile(filename, 'r')
-        self.sndfile.seek(0)
-        self.stream = self.pyAudio.open(self.sndfile.samplerate,
-                                        self.sndfile.channels,
-                                        self.SAMPLE_FORMAT,
-                                        output=True,
-                                        output_device_index=devid,
-                                        stream_callback=self._callback)
+
+        if self.__audio_data is None or self.__filename != filename:
+            self.__filename = filename
+            if self.stream is not None:
+                self.stream.close()
+            self.__position = 0
+            sndfile = soundfile.SoundFile(filename, 'r')
+            self.__audio_data = sndfile.read(always_2d=True, dtype=self.DTYPE).tobytes()
+            sndfile.close()
+            self.stream = self.pyAudio.open(sndfile.samplerate,
+                                            sndfile.channels,
+                                            self.SAMPLE_FORMAT,
+                                            output=True,
+                                            output_device_index=devid,
+                                            stream_callback=self._callback)
+            self._bytes_per_frame = pyaudio.get_sample_size(self.SAMPLE_FORMAT) * sndfile.channels
+        else:
+            self.stream.stop_stream()
+            self.__position = 0
+            self.stream.start_stream()
 
     def _callback(self, _in_data, frame_count, _time_info, _status):
-        data = self.sndfile.read(frame_count, always_2d=True,
-                                 fill_value=0, dtype=self.DTYPE
-                                 ).tobytes()
-        if self.sndfile.tell() < len(self.sndfile):
+        frame_size = frame_count * self._bytes_per_frame
+        end = self.__position + frame_size
+        data = self.__audio_data[self.__position:end]
+        data.ljust(frame_size, b'\0') # zero-padding
+        if end < len(self.__audio_data):
             code = pyaudio.paContinue
+            self.__position = end
         else:
             code = pyaudio.paComplete
+            self.__position = 0
         return data, code
 
 
