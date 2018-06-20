@@ -1,0 +1,5 @@
+.idea/
+venv/
+testapp.py.ini
+in/
+out/
