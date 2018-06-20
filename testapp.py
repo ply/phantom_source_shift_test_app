@@ -106,7 +106,7 @@ class ResultsHandler:
         if os.path.exists(filename):
             raise FileExistsError
         self.f = open(filename, 'w')
-        self.parser = configparser.ConfigParser()
+        self.parser = configparser.ConfigParser(interpolation=None)
         self.parser.add_section('metadata')
 
     def __setitem__(self, k, v):
