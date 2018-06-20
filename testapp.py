@@ -240,10 +240,11 @@ class RunTestFrame(wx.Frame, Player):
         # load config file
         self.scheme = TestScheme(test_config_file)
 
+        today = datetime.datetime.today()
         # open results file
         outfilename = os.path.join(
             self.scheme.results_dir,
-            datetime.datetime.today().strftime("%Y-%m-%d-T-%H-%M-%S.txt"))
+            today.strftime("%Y-%m-%d-T-%H-%M-%S.txt"))
         try:
             self.results = ResultsHandler(outfilename)
         except FileExistsError:
@@ -268,7 +269,7 @@ class RunTestFrame(wx.Frame, Player):
             'name': dialog.GetValue(),
             'test_filename': test_config_file,
             'test_description': self.scheme.description,
-            'start': datetime.datetime.today().isoformat(timespec='seconds'),
+            'started': today.isoformat(timespec='seconds'),
             'completed': False,
         })
         dialog.Destroy()
