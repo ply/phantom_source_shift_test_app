@@ -104,7 +104,7 @@ class TestScheme:
             samples = tuple(map(
                 lambda k: self._Example(k, os.path.join(self.samples_dir, k)),
                 parser[name].keys()))
-            if randomize:
+            if randomize and name.lower() != 'anchors':
                 samples = tuple(random.sample(samples, len(samples)))
             self.test.append(self._Set(name, samples))
 
