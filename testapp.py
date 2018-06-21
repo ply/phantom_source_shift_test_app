@@ -36,9 +36,8 @@ class Player:
             if self.stream is not None:
                 self.stream.close()
             self.__position = 0
-            sndfile = soundfile.SoundFile(filename, 'r')
-            self.__audio_data = sndfile.read(always_2d=True, dtype=self.DTYPE).tobytes()
-            sndfile.close()
+            with soundfile.SoundFile(filename, 'r') as sndfile:
+                self.__audio_data = sndfile.read(always_2d=True, dtype=self.DTYPE).tobytes()
             self.stream = self.pyAudio.open(sndfile.samplerate,
                                             sndfile.channels,
                                             self.SAMPLE_FORMAT,
@@ -220,7 +219,13 @@ class SetupFrame(wx.Frame, Player):
 
     def on_check(self, _event):
         pa_dev_id = self.devices[self.devCtl.GetSelection()]["index"]
-        filename = TestScheme(self.inCtl.GetPath()).test_sample
+        file = self.inCtl.GetPath()
+        if not os.path.isfile(file):
+            wx.MessageDialog(self, "{} nie jest plikiem".format(file),
+                             "Błąd otwarcia pliku testu", wx.OK|wx.ICON_ERROR
+                            ).ShowModal()
+            return
+        filename = TestScheme(file).test_sample
         self.play(filename, pa_dev_id)
 
     def on_ok(self, _event):
