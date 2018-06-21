@@ -116,7 +116,7 @@ class ResultsHandler:
                     .format(os.path.dirname(filename)))
         if os.path.exists(filename):
             raise FileExistsError
-        self.f = open(filename, 'w')
+        self.f = open(filename, 'w', encoding='utf-8', buffering=1) # line buffering
         self.parser = configparser.ConfigParser(interpolation=None)
         self.parser.add_section('metadata')
 
@@ -137,12 +137,15 @@ class ResultsHandler:
     def submit(self, set, sample, answer, comment, time, playcount):
         if not self.parser.has_section(set):
             self.parser.add_section(set)
-        self.parser.set(set, sample, json.dumps(dict(
-            answer=answer,
-            comment=comment,
-            time=time,
-            playcount=playcount
-        )))
+        self.parser.set(set, sample, json.dumps(
+            dict(
+                answer=answer,
+                comment=comment,
+                time=time,
+                playcount=playcount
+            ),
+            ensure_ascii=False
+        ))
         self.save()
 
     def __del__(self):
