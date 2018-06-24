@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import wx, sys, os, shutil, datetime, configparser, json, random
+import wx, sys, os, shutil, datetime, configparser, json, csv, random
 import traceback
 import pyaudio, soundfile
 
@@ -109,51 +109,24 @@ class TestScheme:
 
 
 class ResultsHandler:
-    def __init__(self, filename):
+    def __init__(self, filename, meta=None):
         if not os.path.isdir(os.path.dirname(filename)):
             raise NotADirectoryError(
                 "{} nie istnieje lub nie jest katalogiem"
                     .format(os.path.dirname(filename)))
         if os.path.exists(filename):
             raise FileExistsError
-        self.f = open(filename, 'w', encoding='utf-8', buffering=1) # line buffering
-        self.parser = configparser.ConfigParser(interpolation=None)
-        self.parser.add_section('metadata')
+        self.f = open(filename, 'wt', encoding='utf-8', buffering=1) # line buffering
+        self._writerow = csv.writer(self.f, lineterminator='\n').writerow
+        if meta is not None:
+            self.add_meta(meta)
+        self._writerow(('set', 'sample', 'answer', 'comment', 'time', 'playcount'))
 
-    def __setitem__(self, k, v):
-        self.set_meta({k: v})
-
-    def set_meta(self, dictionary, save=True):
-        self.parser['metadata'].update({k: str(v) for k, v in dictionary.items()})
-        if save:
-            self.save()
-
-    def save(self):
-        shutil.copyfile(self.f.name, "{}.bak".format(self.f.name))
-        self.f.seek(0)
-        self.f.truncate()
-        self.parser.write(self.f)
+    def add_meta(self, data):
+        self.f.write("# {}".format(json.dumps(data, ensure_ascii=False)))
 
     def submit(self, set, sample, answer, comment, time, playcount):
-        if not self.parser.has_section(set):
-            self.parser.add_section(set)
-        self.parser.set(set, sample, json.dumps(
-            dict(
-                answer=answer,
-                comment=comment,
-                time=time,
-                playcount=playcount
-            ),
-            ensure_ascii=False
-        ))
-        self.save()
-
-    def __del__(self):
-        try:
-            self.save()
-            self.f.close()
-        except AttributeError:
-            pass
+        self._writerow((set, sample, answer, comment, time, playcount))
 
 
 class SetupFrame(wx.Frame, Player):
@@ -264,7 +237,7 @@ class RunTestFrame(wx.Frame, Player):
         # open results file
         outfilename = os.path.join(
             self.scheme.results_dir,
-            today.strftime("%Y-%m-%d-T-%H-%M-%S.txt"))
+            today.strftime("%Y-%m-%d-T-%H-%M-%S.csv"))
         try:
             self.results = ResultsHandler(outfilename)
         except FileExistsError:
@@ -285,12 +258,11 @@ class RunTestFrame(wx.Frame, Player):
         # get user name
         dialog = wx.TextEntryDialog(self, "Jak się nazywasz?", style=wx.OK)
         dialog.ShowModal()
-        self.results.set_meta({
-            'name': dialog.GetValue(),
+        self.results.add_meta({
+            'person': dialog.GetValue(),
             'test_filename': test_config_file,
             'test_description': self.scheme.description,
-            'started': today.isoformat(timespec='seconds'),
-            'completed': False,
+            'test_started': today.isoformat(timespec='seconds'),
         })
         dialog.Destroy()
 
@@ -404,7 +376,7 @@ class RunTestFrame(wx.Frame, Player):
             self.Destroy()
 
     def finalize(self):
-        self.results['completed'] = datetime.datetime.today().isoformat(timespec='seconds')
+        self.results.add_meta({'completed' : datetime.datetime.today().isoformat(timespec='seconds')})
         wx.MessageDialog(self, "Dziękuję za udział w badaniach!",
                          caption="Koniec testu").ShowModal()
         self.Destroy()
