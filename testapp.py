@@ -12,6 +12,7 @@ class Player:
     def __init__(self, pyaudio_instance):
         self.pyAudio = pyaudio_instance
         self.stream = None
+        self._devid = None
         self.__audio_data = None
         self.__position = 0
 
@@ -20,18 +21,16 @@ class Player:
             self.stream.close()
 
     def play(self, filename=None, devid=None):
-        if filename is None:
-            filename = self.__filename
-
         if devid is None:
             devid = self._devid
-        else:
-            self._devid = devid
+
+        if filename is None:
+            filename = self.__filename
 
         if self.stream is not None:
             self.stream.stop_stream()
 
-        if self.__audio_data is None or self.__filename != filename:
+        if self.__audio_data is None or self.__filename != filename or self._devid != devid:
             self.__filename = filename
             if self.stream is not None:
                 self.stream.close()
@@ -44,6 +43,7 @@ class Player:
                                             output=True,
                                             output_device_index=devid,
                                             stream_callback=self._callback)
+            self._devid = devid
             self._bytes_per_frame = pyaudio.get_sample_size(self.SAMPLE_FORMAT) * sndfile.channels
         else:
             self.stream.stop_stream()
