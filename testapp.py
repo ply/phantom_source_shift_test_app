@@ -380,7 +380,7 @@ class RunTestFrame(wx.Frame, Player):
             self.Destroy()
 
     def finalize(self):
-        self.results.add_meta({'completed' : datetime.datetime.today().isoformat(timespec='seconds')})
+        self.results.add_meta({'test_completed' : datetime.datetime.today().isoformat(timespec='seconds')})
         wx.MessageDialog(self, "Dziękuję za udział w badaniach!",
                          caption="Koniec testu").ShowModal()
         self.Destroy()
