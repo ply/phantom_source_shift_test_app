@@ -124,7 +124,7 @@ class ResultsHandler:
         self._writerow = csv.writer(self.f, lineterminator='\n').writerow
         if meta is not None:
             self.add_meta(meta)
-        self._writerow(('set', 'sample', 'answer', 'comment', 'time', 'playcount'))
+        self._writerow(('set', 'file', 'answer', 'comment', 'time', 'playcount'))
 
     def add_meta(self, data):
         self.f.write("# {}".format(json.dumps(data, ensure_ascii=False)))
