@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-import wx, sys, os, shutil, datetime, configparser, json, csv, random
+import wx, sys, os, datetime, configparser, json, csv, random
 import traceback
 import pyaudio, soundfile
+import distutils.util
+from collections import namedtuple
 
 
 class Player:
@@ -65,16 +67,6 @@ class Player:
 
 
 class TestScheme:
-    class _Set:
-        def __init__(self, name, content):
-            self.name = name
-            self.content = content
-
-    class _Example:
-        def __init__(self, name, path):
-            self.name = name
-            self.path = path
-
     def __init__(self, filename):
         basedir = os.path.dirname(filename)
         parser = configparser.ConfigParser(allow_no_value=True)
@@ -98,14 +90,26 @@ class TestScheme:
             self.debug = False
 
         # test
+        Set = namedtuple('Set', 'name, content')
+        Example = namedtuple('Example', 'name, path')
         self.test = list()
-        for name in filter(lambda x: x != 'config', parser.sections()):
-            samples = tuple(map(
-                lambda k: self._Example(k, os.path.join(self.samples_dir, k)),
-                parser[name].keys()))
-            if randomize and name.lower() != 'anchors':
-                samples = tuple(random.sample(samples, len(samples)))
-            self.test.append(self._Set(name, samples))
+        for section_name in filter(lambda x: x != 'config', parser.sections()):
+            samples = list()
+            shuffle = randomize
+            repeat = 1
+            for k, v in parser[section_name].items():
+                if k.lower().endswith('.wav'):
+                    samples.append(Example(k, os.path.join(self.samples_dir, k)))
+                elif k.lower() == 'shuffle':
+                    shuffle = True if v is None else bool(distutils.util.strtobool(v))
+                elif k.lower() == 'repeat':
+                    repeat = int(v)
+                else:
+                    raise KeyError('unknown parameter in section [{}]: {}'.format(section, k))
+            samples *= repeat
+            if shuffle:
+                random.shuffle(samples)
+            self.test.append(Set(section_name, samples))
 
 
 class ResultsHandler:
