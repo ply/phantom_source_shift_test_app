@@ -1,5 +1,7 @@
 ## Dependencies
 
+This app requires at least Python 3.
+
 ### Windows
 
 Note: For ASIO support install PyAudio from 
