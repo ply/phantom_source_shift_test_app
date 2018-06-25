@@ -290,9 +290,17 @@ class RunTestFrame(wx.Frame, Player):
         self.play_btn = wx.Button(panel, label="&Odtwórz")
         self.Bind(wx.EVT_BUTTON, lambda e: self.play(), self.play_btn)
         vbox_add(self.play_btn, wx.ALL)
-        vbox_add(wx.StaticText(panel, label='C', style=wx.ALIGN_CENTRE_HORIZONTAL),
-                 wx.TOP)
+
+        guidesbox = wx.BoxSizer(wx.HORIZONTAL)
+        guidesbox.Add(wx.StaticText(panel, label='L', style=wx.ALIGN_LEFT), 1)
+        guidesbox.Add(wx.StaticText(panel, label='|', style=wx.ALIGN_CENTRE_HORIZONTAL), 2)
+        guidesbox.Add(wx.StaticText(panel, label='C', style=wx.ALIGN_CENTRE_HORIZONTAL), 2)
+        guidesbox.Add(wx.StaticText(panel, label='|', style=wx.ALIGN_CENTRE_HORIZONTAL), 2)
+        guidesbox.Add(wx.StaticText(panel, label='R', style=wx.ALIGN_RIGHT), 1)
+        vbox_add(guidesbox, wx.TOP)
+
         self.slider = wx.Slider(panel, value=0, minValue=-100, maxValue=100)
+        self.slider.pageSize=25
         self.slider.SetSizeHints(402, self.slider.GetMinHeight())
         self.slider.Bind(wx.EVT_LEFT_DCLICK, self.reset_slider)
         self.slider.Bind(wx.EVT_RIGHT_DOWN, self.reset_slider)
