@@ -105,7 +105,7 @@ class TestScheme:
                 elif k.lower() == 'repeat':
                     repeat = int(v)
                 else:
-                    raise KeyError('unknown parameter in section [{}]: {}'.format(section, k))
+                    raise KeyError('unknown parameter in section [{}]: {}'.format(section_name, k))
             samples *= repeat
             if shuffle:
                 random.shuffle(samples)
