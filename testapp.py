@@ -127,10 +127,12 @@ class ResultsHandler:
         self._writerow(('set', 'file', 'answer', 'comment', 'time', 'playcount'))
 
     def add_meta(self, data):
-        self.f.write("# {}".format(json.dumps(data, ensure_ascii=False)))
+        self.f.write("# {}\n".format(json.dumps(data, ensure_ascii=False)))
+        self.f.flush()
 
     def submit(self, set, sample, answer, comment, time, playcount):
         self._writerow((set, sample, answer, comment, time, playcount))
+        self.f.flush()
 
 
 class SetupFrame(wx.Frame, Player):
