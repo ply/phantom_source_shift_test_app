@@ -320,7 +320,7 @@ class RunTestFrame(wx.Frame, Player):
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(panel, 1, wx.ALL | wx.EXPAND, border=5)
         self.SetSizerAndFit(hbox)
-        self.Centre()
+        self.Centre(direction=wx.HORIZONTAL)
 
         # safe closing
         self.Bind(wx.EVT_CLOSE, self.on_close)
