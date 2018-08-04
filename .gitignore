@@ -3,3 +3,8 @@ venv/
 testapp.py.ini
 in/
 out/
+__pycache__
+/build/
+/dist/
+/testapp.spec
+/deps
